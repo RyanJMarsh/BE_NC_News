@@ -1,6 +1,14 @@
 exports.handle400s = (error, request, response, next) => {
-    if (error.code === 400) {
-        response.status(400).send(error)
+    if (error.status) {
+        response.status(error.status).send({message: error.msg})
+    } else {
+        next(error)
+    }
+}
+
+exports.handlePsqlErrors = (error, request, response, next) => {
+    if(error.code = "22P02") {
+        response.status(404).send({message: error.msg})
     } else {
         next(error)
     }
@@ -8,7 +16,7 @@ exports.handle400s = (error, request, response, next) => {
 
 exports.handle404s = (error, request, response, next) => {
     if (error.code === 404) {
-        response.status(404).send(error)
+        response.status(404).send({message: error.msg})
     } else {
         next(error)
     }

@@ -38,3 +38,20 @@ exports.getArticleByIdData = (article_id) => {
       return response.rows;
     });
 };
+
+exports.getCommentsByArticleIdData = (article_id) => {
+  return db
+    .query(
+      `
+    SELECT articles.article_id, comments.comment_id, comments.votes, comments.created_at, comments.author, comments.body
+    FROM articles
+    JOIN comments
+    ON articles.article_id = comments.article_id
+    WHERE articles.article_id = $1
+    ORDER BY created_at desc;`,
+      [article_id]
+    )
+    .then((response) => {
+      return response.rows;
+    });
+};

@@ -73,12 +73,12 @@ describe("GET: /api/articles/:article_id", () => {
         });
       });
   });
-  test("400: returns error when article_id is not of proper type", () => {
+  test("400: returns error when article_id is not of correct type", () => {
     return request(app)
       .get("/api/articles/dog")
       .expect(400)
       .then(({ body }) => {
-        expect(body.msg).toBe("article_id is not of correct type");
+        expect(body.message).toBe("article_id is not of correct type");
       });
   });
   test("404: returns error when article_id does not exist", () => {
@@ -86,7 +86,43 @@ describe("GET: /api/articles/:article_id", () => {
       .get("/api/articles/100000")
       .expect(404)
       .then(({ body }) => {
-        expect(body.msg).toBe("article_id does not exist");
+        expect(body.message).toBe("article_id does not exist");
+      });
+  });
+});
+
+describe("GET: /api/articles/:article_id/comments", () => {
+  test("200: should return comment for given article", () => {
+    return request(app)
+      .get("/api/articles/1/comments")
+      .expect(200)
+      .then(({ body }) => {
+        body.comments.forEach((comment) => {
+          expect(comment).toMatchObject({
+            comment_id: expect.any(Number),
+            author: expect.any(String),
+            article_id: 1,
+            votes: expect.any(Number),
+            body: expect.any(String),
+            created_at: expect.any(String)
+          });
+        });
+      });
+  });
+  test("400: returns error when article_id is not of correct type", () => {
+    return request(app)
+      .get("/api/articles/dog/comments")
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe("article_id is not of correct type");
+      });
+  });
+  test("404: returns error when article_id is of correct type but does not exist", () => {
+    return request(app)
+      .get("/api/articles/100000/comments")
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.message).toBe("article does not exist");
       });
   });
 });
