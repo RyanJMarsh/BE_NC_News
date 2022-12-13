@@ -34,30 +34,59 @@ describe("GET: /api/topics", () => {
   });
 });
 
-xdescribe("GET: /api/articles", () => {
-    test("200: should return articles", () => {
-      return request(app)
-        .get("/api/articles")
-        .expect(200)
-        .then(({ body }) => {
-          body.articles.forEach((article) => {
-            expect(article).toMatchObject({
-                title: expect.any(String),
-                topic: expect.any(String),
-                author: expect.any(String),
-                body: expect.any(String),
-                created_at: expect.any(String),
-                votes: expect.any(Number),
-            });
+describe("GET: /api/articles", () => {
+  test("200: should return articles", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then(({ body }) => {
+        body.articles.forEach((article) => {
+          expect(article).toMatchObject({
+            title: expect.any(String),
+            topic: expect.any(String),
+            author: expect.any(String),
+            body: expect.any(String),
+            created_at: expect.any(String),
+            votes: expect.any(Number),
+            comment_count: expect.any(String),
           });
         });
-    });
-    test('200: should return articles in data order', () => {
-        return request(app)
-        .get("/api/articles")
-        .expect(200)
-        .then(({ body }) => {
-            expect(body.articles).toBeSortedBy("created_at")
-        })
-    })
+      });
   });
+});
+
+describe("GET: /api/articles/:article_id", () => {
+  test("200: should return article", () => {
+    return request(app)
+      .get("/api/articles/3")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.articles[0]).toMatchObject({
+          article_id: 3,
+          title: expect.any(String),
+          body: expect.any(String),
+          votes: expect.any(Number),
+          topic: expect.any(String),
+          author: expect.any(String),
+          created_at: expect.anything(),
+          comment_count: expect.any(String),
+        });
+      });
+  });
+  test("400: returns error when article_id is not of proper type", () => {
+    return request(app)
+      .get("/api/articles/dog")
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("article_id is not of correct type");
+      });
+  });
+  test("404: returns error when article_id does not exist", () => {
+    return request(app)
+      .get("/api/articles/100000")
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe("article_id does not exist");
+      });
+  });
+});
