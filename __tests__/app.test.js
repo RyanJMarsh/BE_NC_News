@@ -45,12 +45,12 @@ describe("GET: /api/articles", () => {
             title: expect.any(String),
             topic: expect.any(String),
             author: expect.any(String),
-            body: expect.any(String),
             created_at: expect.any(String),
             votes: expect.any(Number),
             comment_count: expect.any(String),
           });
         });
+        expect(body.articles).toBeSortedBy("created_at", { descending: true });
       });
   });
 });
@@ -78,7 +78,7 @@ describe("GET: /api/articles/:article_id", () => {
       .get("/api/articles/dog")
       .expect(400)
       .then(({ body }) => {
-        expect(body.message).toBe("article_id is not of correct type");
+        expect(body.message).toBe("Bad Request");
       });
   });
   test("404: returns error when article_id does not exist", () => {
@@ -104,9 +104,17 @@ describe("GET: /api/articles/:article_id/comments", () => {
             article_id: 1,
             votes: expect.any(Number),
             body: expect.any(String),
-            created_at: expect.any(String)
+            created_at: expect.any(String),
           });
         });
+      });
+  });
+  test("200: should return empty array when given an article with no comments", () => {
+    return request(app)
+      .get("/api/articles/2/comments")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.comments.length).toEqual(0);
       });
   });
   test("400: returns error when article_id is not of correct type", () => {
@@ -114,7 +122,7 @@ describe("GET: /api/articles/:article_id/comments", () => {
       .get("/api/articles/dog/comments")
       .expect(400)
       .then(({ body }) => {
-        expect(body.message).toBe("article_id is not of correct type");
+        expect(body.message).toBe("Bad Request");
       });
   });
   test("404: returns error when article_id is of correct type but does not exist", () => {
@@ -122,7 +130,7 @@ describe("GET: /api/articles/:article_id/comments", () => {
       .get("/api/articles/100000/comments")
       .expect(404)
       .then(({ body }) => {
-        expect(body.message).toBe("article does not exist");
-      });
-  });
+        expect(body.message).toBe("article_id does not exist")
+      })
+    })
 });

@@ -30,14 +30,10 @@ exports.getArticleById = (request, response, next) => {
   const { article_id } = request.params;
   getArticleByIdData(article_id)
     .then((articles) => {
-      if (articles.length === 0) {
-        next({ status: 404, msg: "article_id does not exist" });
-      } else {
-        response.status(200).send({ articles });
-      }
+      response.status(200).send({ articles });
     })
     .catch((error) => {
-      next({ status: 400, msg: "article_id is not of correct type" });
+      next(error);
     });
 };
 
@@ -45,13 +41,9 @@ exports.getCommentsByArticleId = (request, response, next) => {
   const { article_id } = request.params;
   getCommentsByArticleIdData(article_id)
     .then((comments) => {
-      if (comments.length === 0) {
-        return next({ status: 404, msg: "article does not exist" });
-      } else {
-        response.status(200).send({ comments });
-      }
+      response.status(200).send({ comments });
     })
     .catch((error) => {
-      next({ status: 400, msg: "article_id is not of correct type"});
+      next(error);
     });
 };
