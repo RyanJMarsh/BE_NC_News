@@ -48,19 +48,87 @@ exports.getArticleByIdData = (article_id) => {
 };
 
 exports.getCommentsByArticleIdData = (article_id) => {
-  return db.query("SELECT article_id FROM articles WHERE article_id = $1", [article_id])
-  .then((checkArticleId) => {
-      if (checkArticleId.rows.length === 0) {
-          return Promise.reject({
-              message: "article_id does not exist",
-              status: 404
-          })
+  return db
+    .query("SELECT article_id FROM articles WHERE article_id = $1", [
+      article_id,
+    ])
+    .then((response) => {
+      if (response.rows.length === 0) {
+        return Promise.reject({
+          message: "article_id does not exist",
+          status: 404,
+        });
+      } else {
+        return db
+          .query(
+            "SELECT * FROM comments WHERE article_id=$1 ORDER BY created_at DESC",
+            [article_id]
+          )
+          .then((response) => {
+            return response.rows;
+          });
       }
-      else {
-          return db.query("SELECT * FROM comments WHERE article_id=$1 ORDER BY created_at DESC", [article_id])
-          .then((comments) => {
-              return comments.rows
-              })
-          }
-      })
-}
+    });
+};
+
+exports.insertNewComment = ({ params, body }) => {
+  if (typeof body.username !== "string" || typeof body.body !== "string") {
+    return Promise.reject({
+      message: "Invalid Comment",
+      status: 400,
+    });
+  } else {
+    return db
+      .query("SELECT article_id FROM articles WHERE article_id = $1", [
+        params.article_id,
+      ])
+      .then((articleIdCheck) => {
+        if (articleIdCheck.rows.length === 0) {
+          return Promise.reject({
+            message: "Not Found",
+            status: 404,
+          });
+        } else {
+          return db
+            .query(
+              "INSERT INTO comments(body, article_id, author) VALUES ($1, $2, $3) RETURNING *;",
+              [body.body, params.article_id, body.username]
+            )
+            .then((newComment) => {
+              return newComment.rows[0];
+            });
+        }
+      });
+  }
+};
+
+exports.updateArticleById = ({ params, body }) => {
+  if (typeof body.inc_votes !== "number") {
+    return Promise.reject({
+      message: "Bad Request",
+      status: 400,
+    });
+  } else {
+    return db
+      .query("SELECT article_id FROM articles WHERE article_id = $1", [
+        params.article_id,
+      ])
+      .then((articleIdCheck) => {
+        if (articleIdCheck.rows.length === 0) {
+          return Promise.reject({
+            message: "Not Found",
+            status: 404,
+          });
+        } else {
+          return db
+            .query(
+              "UPDATE articles SET votes = votes + $1 WHERE article_id = $2 RETURNING *",
+              [body.inc_votes, params.article_id]
+            )
+            .then((updatedArticle) => {
+              return updatedArticle.rows[0];
+            });
+        }
+      });
+  }
+};

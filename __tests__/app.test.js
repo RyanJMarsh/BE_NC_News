@@ -13,7 +13,7 @@ describe("api", () => {
       .get("/aps")
       .expect(404)
       .then(({ body }) => {
-        expect(body.msg).toBe("Path not found");
+        expect(body.message).toBe("Path not found");
       });
   });
 });
@@ -130,7 +130,121 @@ describe("GET: /api/articles/:article_id/comments", () => {
       .get("/api/articles/100000/comments")
       .expect(404)
       .then(({ body }) => {
-        expect(body.message).toBe("article_id does not exist")
-      })
-    })
+        expect(body.message).toBe("article_id does not exist");
+      });
+  });
+});
+
+describe("POST: /api/articles/:article_id/comments", () => {
+  test("201: return object containing comment", () => {
+    const newComment = {
+      username: "butter_bridge",
+      body: "Example Comment Example",
+    };
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send(newComment)
+      .expect(201)
+      .then(({ body }) => {
+        expect(body.comment).toStrictEqual(
+          expect.objectContaining({
+            comment_id: expect.any(Number),
+            body: "Example Comment Example",
+            votes: 0,
+            author: "butter_bridge",
+            article_id: 1,
+            created_at: expect.any(String),
+          })
+        );
+      });
+  });
+  test("400: returns error when comment is invalid", () => {
+    const newComment = {
+      username: "butter_bridge",
+      body: 7,
+    };
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send(newComment)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe("Invalid Comment");
+      });
+  });
+  test("400: returns error when article_id is not correct type", () => {
+    const newComment = {
+      username: "butter_bridge",
+      body: "Example Comment Example",
+    };
+    return request(app)
+      .post("/api/articles/dog/comments")
+      .send(newComment)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe("Bad Request");
+      });
+  });
+  test("400: returns error when article_id does not exist", () => {
+    const newComment = {
+      username: "butter_bridge",
+      body: "Example Comment Example",
+    };
+    return request(app)
+      .post("/api/articles/1000/comments")
+      .send(newComment)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.message).toBe("Not Found");
+      });
+  });
+});
+
+describe("PATCH: /api/articles/:article_id", () => {
+  test("200: should return updated article when sent an object with inc_votes key", () => {
+    const patchObj = { inc_votes: 1 };
+    return request(app)
+      .patch("/api/articles/1")
+      .send(patchObj)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.article).toMatchObject({
+          title: "Living in the shadow of a great man",
+          topic: "mitch",
+          author: "butter_bridge",
+          body: "I find this existence challenging",
+          created_at: expect.any(String),
+          votes: 101,
+        });
+      });
+  });
+  test("400: returns error when patchObj is invalid", () => {
+    const patchObj = { inc_votes: "DOG" };
+    return request(app)
+      .patch("/api/articles/1")
+      .send(patchObj)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe("Bad Request");
+      });
+  });
+  test("400: returns error when article_id is not correct type", () => {
+    const patchObj = { inc_votes: 1 };
+    return request(app)
+      .patch("/api/articles/dog")
+      .send(patchObj)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe("Bad Request");
+      });
+  });
+  test("400: returns error when article_id does not exist", () => {
+    const patchObj = { inc_votes: 1 };
+    return request(app)
+      .patch("/api/articles/1000")
+      .send(patchObj)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.message).toBe("Not Found");
+      });
+  });
 });
