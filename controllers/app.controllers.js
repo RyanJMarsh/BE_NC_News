@@ -6,6 +6,7 @@ const {
   getCommentsByArticleIdData,
   insertNewComment,
   updateArticleById,
+  getUsersData
 } = require("../models/app.models.js");
 
 exports.getTopics = (request, response, next) => {
@@ -69,3 +70,13 @@ exports.patchArticleById = (request, response, next) => {
       next(error);
     });
 };
+
+exports.getUsers = (request, response, next) => {
+  getUsersData()
+    .then((users) => {
+      response.status(200).send({ users });
+    })
+    .catch((err) => {
+      next(err);
+    });
+}

@@ -132,3 +132,9 @@ exports.updateArticleById = ({ params, body }) => {
       });
   }
 };
+
+exports.getUsersData = () => {
+  return db.query('SELECT * FROM users;').then(({ rows }) => {
+    return rows;
+  })
+}
