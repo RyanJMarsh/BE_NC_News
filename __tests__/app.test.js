@@ -47,7 +47,7 @@ describe("GET: /api/articles", () => {
             author: expect.any(String),
             created_at: expect.any(String),
             votes: expect.any(Number),
-            comment_count: expect.any(String),
+            comment_count: expect.any(Number),
           });
         });
         expect(body.articles).toBeSortedBy("created_at", { descending: true });

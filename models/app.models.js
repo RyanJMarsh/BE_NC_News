@@ -1,4 +1,5 @@
 const db = require("../db/connection");
+const format = require("pg-format");
 
 exports.getTopicsData = () => {
   return db.query("SELECT * FROM topics;").then(({ rows }) => {
@@ -6,20 +7,64 @@ exports.getTopicsData = () => {
   });
 };
 
-exports.getArticlesData = () => {
-  return db
-    .query(
-      `
-        SELECT articles.article_id, articles.title, articles.body, articles.votes, articles.topic, articles.author, articles.created_at, COUNT(comments.comment_id) AS comment_count
-        FROM articles
-        JOIN comments
-        ON articles.article_id = comments.article_id
-        GROUP BY articles.article_id
-        ORDER BY created_at desc`
-    )
-    .then(({ rows }) => {
-      return rows;
+exports.getArticlesData = ({ query }) => {
+  const queryValues = [];
+  const topicValue = [];
+  let articlesQueryString =
+    "SELECT articles.*, COUNT(comments.article_id) AS comment_count FROM articles LEFT JOIN comments ON articles.article_id = comments.article_id";
+  if (query.topic) {
+    topicValue.push(query.topic);
+    articlesQueryString += " WHERE topic = $1";
+  }
+  if (query.sort_by) {
+    queryValues.push(query.sort_by);
+    articlesQueryString += " GROUP BY articles.article_id ORDER BY %I";
+  } else {
+    articlesQueryString += " GROUP BY articles.article_id ORDER BY created_at";
+  }
+  if (query.order === "asc") {
+    articlesQueryString += " ASC";
+  } else if (query.order === undefined || query.order === "desc") {
+    articlesQueryString += " DESC";
+  } else {
+    return Promise.reject({
+      message: "Bad Request",
+      status: 400,
     });
+  }
+  const formattedArticlesQueryString = format(articlesQueryString, queryValues);
+
+  return db.query(formattedArticlesQueryString, topicValue).then(({ rows }) => {
+    if (rows.length === 0) {
+      return Promise.reject({
+        message: "Not Found",
+        status: 404,
+      });
+    } else {
+      const formattedArticlesData = rows.map((article) => {
+        const formattedArticle = { ...article };
+        formattedArticle.comment_count = parseInt(
+          formattedArticle.comment_count,
+          10
+        );
+        return formattedArticle;
+      });
+      return formattedArticlesData;
+    }
+  });
+  // return db
+  //   .query(
+  //     `
+  //       SELECT articles.article_id, articles.title, articles.body, articles.votes, articles.topic, articles.author, articles.created_at, COUNT(comments.comment_id) AS comment_count
+  //       FROM articles
+  //       JOIN comments
+  //       ON articles.article_id = comments.article_id
+  //       GROUP BY articles.article_id
+  //       ORDER BY created_at desc`
+  //   )
+  //   .then(({ rows }) => {
+  //     return rows;
+  //   });
 };
 
 exports.getArticleByIdData = (article_id) => {
@@ -134,7 +179,7 @@ exports.updateArticleById = ({ params, body }) => {
 };
 
 exports.getUsersData = () => {
-  return db.query('SELECT * FROM users;').then(({ rows }) => {
+  return db.query("SELECT * FROM users;").then(({ rows }) => {
     return rows;
-  })
-}
+  });
+};

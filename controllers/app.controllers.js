@@ -20,7 +20,7 @@ exports.getTopics = (request, response, next) => {
 };
 
 exports.getArticles = (request, response, next) => {
-  getArticlesData()
+  getArticlesData(request)
     .then((articles) => {
       response.status(200).send({ articles });
     })
